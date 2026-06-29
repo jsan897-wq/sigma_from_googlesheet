@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19 Stock Sigma Analytics Dashboard</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons for high-quality minimalist icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #06070d;
+            --sidebar-bg: rgba(10, 11, 20, 0.6);
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --card-hover-border: rgba(6, 182, 212, 0.3);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dark: #64748b;
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+            --glass-blur: blur(20px);
+            --sidebar-width: 320px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Sidebar styling */
+        aside {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .logo-icon {
+            background: var(--accent-gradient);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.25);
+        }
+
+        .logo-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: -2px;
+            font-weight: 500;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.65rem 1rem 0.65rem 2.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 25px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-cyan);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.4rem;
+            padding: 0 1.5rem;
+            margin-bottom: 0.5rem;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 0.35rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .filter-tab.active, .filter-tab:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .filter-tab.active {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .stock-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0.5rem 1rem 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stock-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .stock-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--card-hover-border);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.05);
+        }
+
+        .stock-item.active {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+        }
+
+        .stock-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .stock-item-symbol {
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+
+        .stock-item-id {
+            font-size: 0.7rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .stock-item-price-sec {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .stock-item-price {
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .stock-item-diff {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .diff-pos {
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .diff-neg {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Main Workspace Panel */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: rgba(6, 7, 13, 0.2);
+        }
+
+        /* Header Bar */
+        .app-header {
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            background: rgba(6, 7, 13, 0.5);
+            flex-shrink: 0;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .stat-badge-value {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .refresh-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--accent-cyan);
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: rotate(30deg);
+        }
+
+        .refresh-btn.loading i {
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Workspace Content Area */
+        .workspace-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Loading / Error / Empty States */
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .status-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+            stroke-width: 1.5;
+        }
+
+        .status-icon.loading {
+            color: var(--accent-cyan);
+            animation: spin 2s infinite linear;
+        }
+
+        .status-icon.error {
+            color: var(--accent-red);
+        }
+
+        .status-icon.empty {
+            color: var(--text-dark);
+        }
+
+        .status-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .status-desc {
+            color: var(--text-muted);
+            max-width: 400px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Main Dashboard View grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card panels */
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Stock Info Panel */
+        .stock-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stock-title-section h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.25rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stock-title-section p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+            font-weight: 500;
+        }
+
+        .stock-price-highlight {
+            text-align: right;
+        }
+
+        .price-large {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 0.4rem;
+        }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .metric-card-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .metric-card-values {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-val-main {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .metric-val-sub {
+            font-size: 0.75rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Interactive Sigma Gauge component */
+        .gauge-section {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .gauge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .gauge-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .gauge-status {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 30px;
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            padding: 2rem 0 3.5rem 0;
+            margin: 0 1rem;
+        }
+
+        .gauge-track {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, 
+                var(--accent-red) 0%, 
+                var(--accent-orange) 30%, 
+                var(--text-dark) 50%, 
+                var(--accent-cyan) 70%, 
+                var(--accent-green) 100%
+            );
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .gauge-marker {
+            position: absolute;
+            top: -10px;
+            width: 24px;
+            height: 32px;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+            transition: left 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gauge-pointer {
+            width: 4px;
+            height: 32px;
+            background: #ffffff;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+            position: relative;
+        }
+
+        .gauge-pointer::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #ffffff;
+        }
+
+        .gauge-pointer-label {
+            position: absolute;
+            top: -28px;
+            background: #ffffff;
+            color: #000000;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .gauge-ticks {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 2.8rem;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .gauge-tick {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40px;
+            transform: translateX(-50%);
+        }
+
+        .gauge-tick:first-child {
+            transform: translateX(0);
+            align-items: flex-start;
+        }
+
+        .gauge-tick:last-child {
+            transform: translateX(-100%);
+            align-items: flex-end;
+        }
+
+        .gauge-tick-line {
+            width: 1px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            margin-bottom: 0.4rem;
+        }
+
+        .gauge-tick-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .gauge-tick-val {
+            font-size: 0.65rem;
+            color: var(--text-dark);
+            margin-top: 0.1rem;
+            font-weight: 500;
+        }
+
+        /* Detail Tables / Chart Area */
+        .details-section {
+            margin-top: 1.5rem;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--card-border);
+            gap: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.6rem 0.2rem;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Styled Tables */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .table-sigma-name {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Right panel / summary visualizations */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+        }
+
+        /* Live Google Sheet chart embed */
+        .live-chart-wrap {
+            width: 100%;
+            height: 320px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .live-chart-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            /* Inverts the white Google chart background to match dark theme */
+            filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(1.2) contrast(1.05);
+        }
+        .live-chart-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 0.5rem;
+            color: var(--text-dark);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .live-chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .live-chart-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent-green);
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.25);
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+        }
+
+        /* Grid Overview View */
+        .overview-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .overview-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .overview-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-hover-border);
+            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.08);
+        }
+
+        .overview-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .overview-card-symbol {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .overview-card-price {
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+        }
+
+        .overview-card-gauge-preview {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .overview-card-gauge-fill {
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 3px;
+        }
+
+        .overview-card-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* View Toggle Mode buttons in Header */
+        .view-toggles {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.2rem;
+        }
+
+        .view-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle-btn.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Color classes for different deviations */
+        .color-sig-3-neg { color: var(--accent-red); }
+        .color-sig-2-neg { color: #f87171; }
+        .color-sig-1-neg { color: #fca5a5; }
+        .color-sig-close { color: #cbd5e1; }
+        .color-sig-1-pos { color: #6ee7b7; }
+        .color-sig-2-pos { color: #34d399; }
+        .color-sig-3-pos { color: var(--accent-green); }
+
+        .bg-sig-3-neg { background-color: var(--accent-red); }
+        .bg-sig-2-neg { background-color: #f87171; }
+        .bg-sig-1-neg { background-color: #fca5a5; }
+        .bg-sig-close { background-color: #cbd5e1; }
+        .bg-sig-1-pos { background-color: #6ee7b7; }
+        .bg-sig-2-pos { background-color: #34d399; }
+        .bg-sig-3-pos { background-color: var(--accent-green); }
+
+        /* Banner styles */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .welcome-text h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(to right, #ffffff, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-text p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        /* Mobile layout fixes */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            margin-right: 0.75rem;
+        }
+
+        @media (max-width: 900px) {
+            aside {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+            aside.open {
+                transform: translateX(0);
+            }
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        /* Portfolio Specific Styling */
+        .portfolio-form input, 
+        .portfolio-form select {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 0.65rem 1rem;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .portfolio-form input:focus, 
+        .portfolio-form select:focus {
+            border-color: var(--accent-cyan);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+        }
+
+        .portfolio-form select option {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            padding: 0.4rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: var(--accent-red);
+            color: white;
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+
+        .badge-buy {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
+
+        .badge-sell {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo-container">
+                    <div class="logo-icon">
+                        <i data-feather="trending-up"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Sigma Analytics</h1>
+                        <span>19 Stock Deviation Suite</span>
+                    </div>
+                </a>
+                <div class="search-box">
+                    <i data-feather="search"></i>
+                    <input type="text" id="search-input" placeholder="Search stock symbol..." autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-tabs" id="filters-container">
+                <div class="filter-tab active" data-filter="all">All Stocks</div>
+                <div class="filter-tab" data-filter="bullish">Bullish</div>
+                <div class="filter-tab" data-filter="bearish">Bearish</div>
+                <div class="filter-tab" data-filter="high-vol">High Vol</div>
+            </div>
+
+            <!-- Stock List -->
+            <div class="stock-list" id="stock-list-container">
+                <!-- Dynamically populated -->
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main>
+            
+            <!-- App Header -->
+            <header class="app-header">
+                <div style="display: flex; align-items: center;">
+                    <button class="mobile-toggle" id="menu-toggle">
+                        <i data-feather="menu"></i>
+                    </button>
+                    <!-- Mode toggles -->
+                    <div class="view-toggles">
+                        <button class="view-toggle-btn active" id="btn-view-dashboard">
+                            <i data-feather="layout" style="width:14px; height:14px;"></i> Dashboard
+                        </button>
+                        <button class="view-toggle-btn" id="btn-view-grid">
+                            <i data-feather="grid" style="width:14px; height:14px;"></i> Overview Grid
+                        </button>
+                        <button class="view-toggle-btn" id="btn-view-portfolio">
+                            <i data-feather="briefcase" style="width:14px; height:14px;"></i> Portfolio Tracker
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats summary / Reload -->
+                <div class="header-stats">
+                    <div class="stat-badge">
+                        <span>Total Stocks:</span>
+                        <span class="stat-badge-value" id="stat-total-count">0</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span>Avg 6DIFF:</span>
+                        <span class="stat-badge-value" id="stat-avg-6diff">0.00</span>
+                    </div>
+                    
+                    <div class="refresh-section">
+                        <span class="last-updated" id="last-updated-time">Last updated: --:--:--</span>
+                        <button class="refresh-btn" id="btn-refresh" title="Reload Sheet Data">
+                            <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Workspace Content -->
+            <div class="workspace-content" id="workspace-container">
+                
+                <!-- Loading State (Default) -->
+                <div class="status-container" id="status-loading">
+                    <i data-feather="loader" class="status-icon loading"></i>
+                    <h3 class="status-title">Loading Sheet Data</h3>
+                    <p class="status-desc">Fetching the latest standard deviation calculations from your Google Sheet...</p>
+                </div>
+
+                <!-- Error State -->
+                <div class="status-container" id="status-error" style="display: none;">
+                    <i data-feather="alert-circle" class="status-icon error"></i>
+                    <h3 class="status-title">Failed to Load Data</h3>
+                    <p class="status-desc" id="error-message">Verify your internet connection and that the Google Sheet is public.</p>
+                    <button class="filter-tab" style="margin-top: 1rem; padding: 0.5rem 1.25rem;" onclick="loadData()">Retry Connection</button>
+                </div>
+
+                <!-- Select Stock State -->
+                <div class="status-container" id="status-select-stock" style="display: none;">
+                    <i data-feather="bar-chart-2" class="status-icon empty"></i>
+                    <h3 class="status-title">Select a Stock</h3>
+                    <p class="status-desc">Choose a stock from the sidebar to inspect its detailed standard deviation metrics, sigma targets, and trend line.</p>
+                </div>
+
+                <!-- Workspace Dashboards (Hidden until data loads) -->
+                <div id="dashboard-view" style="display: none;">
+                    
+                    <!-- Welcome / Quick Status banner -->
+                    <div class="welcome-banner" style="margin-bottom: 2rem;">
+                        <div class="welcome-text">
+                            <h3 id="banner-title">Sigma Level Distribution</h3>
+                            <p id="banner-description">Price deviation model displaying standard deviations mapping resistance and support levels.</p>
+                        </div>
+                        <div class="stat-badge" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.2);">
+                            <i data-feather="check-circle" style="width: 14px; height: 14px; color: var(--accent-cyan);"></i>
+                            <span style="color: var(--accent-cyan); font-weight: 600;">Feed Live</span>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        
+                        <!-- Left Main Panel -->
+                        <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            
+                            <!-- Detailed Header -->
+                            <div class="stock-detail-header">
+                                <div class="stock-title-section">
+                                    <h2 id="stock-name">---</h2>
+                                    <p id="stock-desc">Individual stock deviation statistics</p>
+                                </div>
+                                <div class="stock-price-highlight">
+                                    <div class="price-large" id="stock-price">0.00</div>
+                                    <div class="price-label">Current close price</div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics Grid -->
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-card-label">
+                                        <i data-feather="play" style="width:12px; height:12px; transform: rotate(-90deg);"></i> Open
+                                    </div>
+                                    <div class="metric-card-values">
+                                        <span class="metric-val-main" id="metric-open-val">0.00</span>
+                                        <span class="metric-val-sub" id="metric-open-base">Base: 0.00</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card-label">
+                                        <i data-feather="arrow-up" style="width:12px; height:12px; color: var(--accent-green);"></i> High
+                                    </div>
+                                    <div class="metric-card-values">
+                                        <span class="metric-val-main" id="metric-high-val">0.00</span>
+                                        <span class="metric-val-sub" id="metric-high-base">Base: 0.00</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-card-label">
+                                        <i data-feather="arrow-down" style="width:12px; height:12px; color: var(--accent-red);"></i> Low
+                                    </div>
+                                    <div class="metric-card-values">
+                                        <span class="metric-val-main" id="metric-low-val">0.00</span>
+                                        <span class="metric-val-sub" id="metric-low-base">Base: 0.00</span>
+                                    </div>
+                                </div>
+                                <div class="metric-card" style="border-color: rgba(99, 102, 241, 0.25);">
+                                    <div class="metric-card-label" style="color: var(--accent-indigo);">
+                                        <i data-feather="activity" style="width:12px; height:12px;"></i> 6DIFF Range
+                                    </div>
+                                    <div class="metric-card-values">
+                                        <span class="metric-val-main" id="metric-diff-val" style="color: var(--accent-cyan);">0.00</span>
+                                        <span class="metric-val-sub" id="metric-diff-pct">Volatility metric</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Gauge -->
+                            <div class="gauge-section">
+                                <div class="gauge-header">
+                                    <div class="gauge-title">
+                                        <i data-feather="compass" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i> Price Deviation Gauge
+                                    </div>
+                                    <span class="gauge-status" id="gauge-status-label">Neutral</span>
+                                </div>
+                                <div class="gauge-wrapper">
+                                    <div class="gauge-track">
+                                        <div class="gauge-marker" id="gauge-marker">
+                                            <div class="gauge-pointer-label" id="gauge-pointer-text">0.00</div>
+                                            <div class="gauge-pointer"></div>
+                                        </div>
+                                    </div>
+                                    <div class="gauge-ticks" id="gauge-ticks-container">
+                                        <!-- Gauge ticks populated in JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detailed tabs table -->
+                            <div class="details-section">
+                                <div class="tabs-header">
+                                    <button class="tab-btn active" data-tab="tab-sigmas">Sigma Target Analysis</button>
+                                    <button class="tab-btn" data-tab="tab-raw">Raw Sheet Rows</button>
+                                </div>
+
+                                <div class="tab-content active" id="tab-sigmas">
+                                    <div class="table-wrapper">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Standard Deviation</th>
+                                                    <th>Trigger Level</th>
+                                                    <th>Target Price</th>
+                                                    <th>Offset</th>
+                                                    <th>% Difference</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="sigma-table-body">
+                                                <!-- Row entries filled by JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="tab-content" id="tab-raw">
+                                    <div class="table-wrapper">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Metric/Level</th>
+                                                    <th>Base Value (Col 2)</th>
+                                                    <th>Current Value (Col 3)</th>
+                                                    <th>Dev / Delta</th>
+                                                    <th>Percentage</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="raw-table-body">
+                                                <!-- Raw rows filled by JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Panel: Visual charts -->
+                        <div class="right-panel">
+
+                            <!-- Live Google Sheet chart card -->
+                            <div class="glass-card">
+                                <div class="live-chart-header">
+                                    <div class="gauge-title">
+                                        <i data-feather="trending-up" style="width:16px;height:16px;color:var(--accent-green);"></i>
+                                        Live Stock Chart
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                                        <span id="live-chart-symbol" style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;"></span>
+                                        <span class="live-chart-badge" id="live-chart-badge" style="display:none;">● Live</span>
+                                    </div>
+                                </div>
+                                <div class="live-chart-wrap" id="live-chart-wrap">
+                                    <div class="live-chart-placeholder">
+                                        <i data-feather="bar-chart-2" style="width:28px;height:28px;opacity:0.3;"></i>
+                                        <span>Select a stock to view chart</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chart card -->
+                            <div class="glass-card">
+                                <div class="gauge-title" style="margin-bottom: 1.5rem;">
+                                    <i data-feather="bar-chart" style="width: 16px; height: 16px; color: var(--accent-indigo);"></i> Deviation Spread Chart
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="deviationChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Trading Notes card -->
+                            <div class="glass-card" style="flex-grow: 1;">
+                                <div class="gauge-title" style="margin-bottom: 1rem;">
+                                    <i data-feather="info" style="width: 16px; height: 16px; color: var(--accent-orange);"></i> Analyst Guide
+                                </div>
+                                <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.8rem;">
+                                    <p>The standard deviation model maps the current asset price against calculated Sigma bands. This acts as statistical boundaries to spot overextended market conditions.</p>
+                                    <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                                        <li><strong style="color: var(--accent-green);">SIGMA +3 / +2</strong>: Standard resistance levels. Prices reaching here are statistically overextended upward.</li>
+                                        <li><strong style="color: #cbd5e1;">CLOSE</strong>: Point of equilibrium.</li>
+                                        <li><strong style="color: var(--accent-red);">SIGMA -3 / -2</strong>: Standard support levels. Overextended downward.</li>
+                                    </ul>
+                                    <p style="border-top: 1px solid var(--card-border); padding-top: 0.8rem; margin-top: 0.4rem; font-style: italic;">Note: Auto-refreshes every 60 seconds to ensure you see real-time updates when the sheet changes.</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Grid Summary View (Hidden by default) -->
+                <div id="grid-view" class="overview-view" style="display: none;">
+                    <div class="welcome-banner" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="welcome-text">
+                            <h3>Full Stock Matrix Dashboard</h3>
+                            <p>Overview of all 19+ monitored tickers. Click any card to inspect detailed deviation models.</p>
+                        </div>
+                    </div>
+                    <div class="overview-cards-grid" id="grid-cards-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Portfolio Tracker View (Hidden by default) -->
+                <div id="portfolio-view" class="overview-view" style="display: none;">
+                    <div class="welcome-banner" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%); border-color: rgba(6, 182, 212, 0.3);">
+                        <div class="welcome-text">
+                            <h3>Portfolio & Watchlist Tracker</h3>
+                            <p>Track your custom positions and watch lists. Calculated dynamically using live standard deviation prices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <!-- Left Panel: Manual Entry Form & Transactions Table -->
+                        <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div class="gauge-title" style="margin-bottom: 0.5rem;">
+                                <i data-feather="plus-circle" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i> Add Custom Position
+                            </div>
+                            
+                            <form id="portfolio-form" class="portfolio-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) auto; gap: 1rem; align-items: flex-end;">
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="portfolio-symbol" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Stock Symbol</label>
+                                    <input type="text" id="portfolio-symbol" placeholder="e.g., TATAMOTORS" list="ticker-suggestions" required autocomplete="off" style="text-transform: uppercase;">
+                                    <datalist id="ticker-suggestions"></datalist>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="portfolio-price" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Entry Price</label>
+                                    <input type="number" step="any" id="portfolio-price" placeholder="e.g., 950.50" required>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="portfolio-target" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Target Price</label>
+                                    <input type="number" step="any" id="portfolio-target" placeholder="e.g., 1050.00" required>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <label for="portfolio-action" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Action Type</label>
+                                    <select id="portfolio-action" required style="cursor: pointer;">
+                                        <option value="BUY">BUY</option>
+                                        <option value="SELL">SELL</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="filter-tab active" style="padding: 0.7rem 1.5rem; height: 38px; border: none; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                                    <i data-feather="plus" style="width: 16px; height: 16px;"></i> Add Entry
+                                </button>
+                            </form>
+                            
+                            <div class="gauge-title" style="margin-top: 1rem; margin-bottom: 0.5rem;">
+                                <i data-feather="list" style="width: 16px; height: 16px; color: var(--accent-indigo);"></i> Monitored Holdings
+                            </div>
+                            
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Ticker</th>
+                                            <th>Action</th>
+                                            <th>Entry Price</th>
+                                            <th>Target Price</th>
+                                            <th>Current Price</th>
+                                            <th>Profit / Loss (%)</th>
+                                            <th style="width: 80px; text-align: center;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="portfolio-table-body">
+                                        <!-- Dynamic entries will go here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Overview summary analytics -->
+                        <div class="right-panel">
+                            <div class="glass-card">
+                                <div class="gauge-title" style="margin-bottom: 1.25rem;">
+                                    <i data-feather="pie-chart" style="width: 16px; height: 16px; color: var(--accent-orange);"></i> Summary Analytics
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="metric-card" style="border-color: rgba(6, 182, 212, 0.25);">
+                                        <div class="metric-card-label">Total Invested Value</div>
+                                        <span class="metric-val-main" id="port-total-invested" style="font-size: 1.75rem;">0.00</span>
+                                    </div>
+                                    <div class="metric-card" style="border-color: rgba(16, 185, 129, 0.25);" id="port-pl-container">
+                                        <div class="metric-card-label" id="port-pl-label">Portfolio Net P&L</div>
+                                        <span class="metric-val-main" id="port-net-pl">0.00%</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; line-height: 1.5; color: var(--text-dark); margin-top: 0.5rem;">
+                                        <p>💡 Tip: Values automatically compute using the live standard deviation close price fetched from your Google Sheet. Auto-recalculates every 60 seconds.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Google Sheet CSV Export link (CORS enabled by Google Viz framework)
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1BB_aikaPd2OTTgYXdAEdz7Kl4ARs0VhYVf1CCf5EfRw/gviz/tq?tqx=out:csv&sheet=indvidual";
+
+        // ── Stock → Live chart URL mapping (from google_sheet_graph_link.xlsx) ──
+        // Key = UPPERCASE symbol. Serial order = stock IDs 1-25.
+        const STOCK_CHART_MAP = {
+            "COALINDIA":  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=485538350&format=interactive",
+            "BAJAJHFL":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=929309738&format=interactive",
+            "BIGBLOC":    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=544223584&format=interactive",
+            "GAIL":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1713802194&format=interactive",
+            "HINDZINC":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=233298183&format=interactive",
+            "SAMMAANCAP": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1321126524&format=interactive",
+            "INFY":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1267887417&format=interactive",
+            "IRCON":      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1486783775&format=interactive",
+            "IRCTC":      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1243224500&format=interactive",
+            "IRFC":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1062794123&format=interactive",
+            "ITC":        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1670666420&format=interactive",
+            "ITCHOTELS":  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1592091988&format=interactive",
+            "NBCC":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=2028701393&format=interactive",
+            "PATELENG":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=234491938&format=interactive",
+            "SAKUMA":     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1062152209&format=interactive",
+            "SEACOAST":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1937820842&format=interactive",
+            "TATAMOTORS": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1861714255&format=interactive",
+            "TATAPOWER":  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=2032536399&format=interactive",
+            "TATASTEEL":  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1126999344&format=interactive",
+            "TATATECH":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1506905905&format=interactive",
+            "HAPPSTMNDS": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=64124250&format=interactive",
+            "TTML":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=255815054&format=interactive",
+            "VEDL":       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=80436417&format=interactive",
+        };
+        // Serial-order fallback array (IDs 1-25 in order from the xlsx)
+        const STOCK_CHART_BY_ID = [
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=485538350&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=929309738&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=544223584&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1156159064&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1713802194&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=233298183&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1321126524&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1267887417&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1486783775&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1243224500&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1062794123&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1670666420&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1592091988&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=2028701393&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=234491938&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1062152209&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1937820842&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1861714255&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=2032536399&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1126999344&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=1506905905&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=64124250&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=255815054&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=80436417&format=interactive",
+            "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1sb9EgMf6zl4YLDsvJ0n_TZ2Gag6gR8AtgIVYvnRnZhpa8YLZwHG_LM5I-XmuzwYlgDYwsfh4eJYn/pubchart?oid=336700644&format=interactive"
+        ];
+        
+        let rawStocksData = [];
+        let filteredStocks = [];
+        let selectedStockId = null;
+        let activeView = 'dashboard'; // 'dashboard' or 'grid' or 'portfolio'
+        let currentFilter = 'all';
+        let chartInstance = null;
+        let autoRefreshInterval = null;
+        let portfolioItems = []; // Array of { symbol, entryPrice, action, id }
+
+        // RFC-compliant CSV Parser
+        function parseCSV(text) {
+            let lines = [];
+            let row = [""];
+            let insideQuote = false;
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                let nextChar = text[i+1];
+                if (char === '"') {
+                    if (insideQuote && nextChar === '"') {
+                        row[row.length - 1] += '"';
+                        i++;
+                    } else {
+                        insideQuote = !insideQuote;
+                    }
+                } else if (char === ',' && !insideQuote) {
+                    row.push("");
+                } else if ((char === '\r' || char === '\n') && !insideQuote) {
+                    if (char === '\r' && nextChar === '\n') {
+                        i++;
+                    }
+                    lines.push(row);
+                    row = [""];
+                } else {
+                    row[row.length - 1] += char;
+                }
+            }
+            if (row.length > 1 || row[0] !== "") {
+                lines.push(row);
+            }
+            return lines;
+        }
+
+        // Parse CSV structure to stock data objects
+        function processCsvData(rows) {
+            const stocks = [];
+            let i = 0;
+            while (i < rows.length) {
+                const row = rows[i];
+                // Matches standard pattern: Row starts with a number, and second column has content
+                if (row && row.length > 1 && /^\d+$/.test(row[0].trim()) && row[1].trim()) {
+                    const symbol = row[1].trim();
+                    const stock = {
+                        id: parseInt(row[0].trim()),
+                        symbol: symbol,
+                        metrics: {},
+                        sigmas: [],
+                        rawRows: [] // Keep raw rows for technical table view
+                    };
+                    
+                    stock.rawRows.push({
+                        type: 'header',
+                        data: [...row]
+                    });
+
+                    i++;
+                    // Read subsequent rows for metrics & sigmas until we find a row starting with the next stock id
+                    while (i < rows.length) {
+                        const nextRow = rows[i];
+                        if (nextRow && nextRow.length > 0 && /^\d+$/.test(nextRow[0].trim())) {
+                            break; // Hits next stock
+                        }
+
+                        stock.rawRows.push({
+                            type: 'data',
+                            data: [...nextRow]
+                        });
+
+                        // Capture metric rows (open, high, low, close 2)
+                        if (nextRow && nextRow.length > 2 && nextRow[1].trim()) {
+                            const metricKey = nextRow[1].trim().toLowerCase();
+                            if (['open', 'high', 'low', 'close 2'].includes(metricKey)) {
+                                stock.metrics[metricKey] = {
+                                    val1: nextRow[2] ? nextRow[2].trim() : "",
+                                    val2: nextRow[3] ? nextRow[3].trim() : ""
+                                };
+                            }
+                        }
+
+                        // Capture sigma rows (SIGMA -3, -2, -1, CLOSE, +1, +2, +3, 6DIFF)
+                        if (nextRow && nextRow.length > 4 && nextRow[4].trim()) {
+                            const sigmaName = nextRow[4].trim();
+                            // Standardize standard naming typos
+                            let cleanName = sigmaName;
+                            if (sigmaName.toUpperCase() === 'SOGMA +2') cleanName = 'SIGMA +2';
+
+                            stock.sigmas.push({
+                                rawName: sigmaName,
+                                name: cleanName,
+                                val1: nextRow[5] ? nextRow[5].trim() : "",
+                                val2: nextRow[6] ? nextRow[6].trim() : "",
+                                val3: nextRow[7] ? nextRow[7].trim() : "",
+                                val4: nextRow[8] ? nextRow[8].trim() : ""
+                            });
+                        }
+                        i++;
+                    }
+                    stocks.push(stock);
+                    continue;
+                }
+                i++;
+            }
+            return stocks;
+        }
+
+        // Setup global visualization handler to catch Google Sheet's JSONP response
+        window.google = {
+            visualization: {
+                Query: {
+                    setResponse: function(response) {
+                        handleJsonpResponse(response);
+                    }
+                }
+            }
+        };
+
+        function handleJsonpResponse(response) {
+            try {
+                if (!response || response.status !== 'ok') {
+                    throw new Error(response.reason || "Google Visualization API returned error status.");
+                }
+
+                const table = response.table;
+                if (!table || !table.rows) {
+                    throw new Error("No table rows found in response.");
+                }
+
+                // Map Google JSON cells to 2D array representation matching CSV rows
+                const parsedRows = table.rows.map(row => {
+                    if (!row || !row.c) return [];
+                    return row.c.map(cell => {
+                        if (!cell) return "";
+                        if (cell.v === null || cell.v === undefined) return "";
+                        return cell.v.toString();
+                    });
+                });
+
+                rawStocksData = processCsvData(parsedRows);
+
+                if (rawStocksData.length === 0) {
+                    throw new Error("Parsed sheet contains no compatible stock format blocks.");
+                }
+
+                // Update summary metrics in header
+                document.getElementById('stat-total-count').textContent = rawStocksData.length;
+                
+                let sum6Diff = 0;
+                let count6Diff = 0;
+                rawStocksData.forEach(s => {
+                    const diffObj = s.sigmas.find(sig => sig.name === 'SIGMA 6DIFF');
+                    if (diffObj && diffObj.val1) {
+                        const val = parseFloat(diffObj.val1);
+                        if (!isNaN(val)) {
+                            sum6Diff += val;
+                            count6Diff++;
+                        }
+                    }
+                });
+                if (count6Diff > 0) {
+                    document.getElementById('stat-avg-6diff').textContent = (sum6Diff / count6Diff).toFixed(2);
+                }
+
+                // Set active stock if not set
+                if (!selectedStockId || !rawStocksData.find(s => s.id === selectedStockId)) {
+                    selectedStockId = rawStocksData[0].id;
+                }
+
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('last-updated-time').textContent = `Last updated: ${now.toTimeString().split(' ')[0]}`;
+
+                // Process list and render
+                applyFilterAndSearch();
+                populateTickerSuggestions();
+                refreshView();
+
+                // Clean up injected script
+                const existingScript = document.getElementById('jsonp-fetch-script');
+                if (existingScript) existingScript.remove();
+
+            } catch (err) {
+                console.error("JSONP processing failed: ", err);
+                document.getElementById('status-loading').style.display = 'none';
+                document.getElementById('error-message').textContent = `Could not process spreadsheet: ${err.message}`;
+                document.getElementById('status-error').style.display = 'flex';
+            } finally {
+                const refreshBtn = document.getElementById('btn-refresh');
+                if (refreshBtn) refreshBtn.classList.remove('loading');
+            }
+        }
+
+        // Fetch Google Sheet
+        async function loadData() {
+            const refreshBtn = document.getElementById('btn-refresh');
+            if (refreshBtn) refreshBtn.classList.add('loading');
+            
+            // Show loaders
+            document.getElementById('status-loading').style.display = 'flex';
+            document.getElementById('status-error').style.display = 'none';
+            document.getElementById('status-select-stock').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('grid-view').style.display = 'none';
+
+            try {
+                // Remove existing script tags if any
+                const existingScript = document.getElementById('jsonp-fetch-script');
+                if (existingScript) existingScript.remove();
+
+                // Inject dynamic script tag to trigger JSONP callback from Google Sheets
+                const script = document.createElement('script');
+                script.id = 'jsonp-fetch-script';
+                // Convert out:csv to default visualization output structure
+                const fetchUrl = SHEET_CSV_URL.replace('tqx=out:csv', '') + `&_nocache=${new Date().getTime()}`;
+                script.src = fetchUrl;
+                
+                script.onerror = () => {
+                    document.getElementById('status-loading').style.display = 'none';
+                    document.getElementById('error-message').textContent = "Failed to load Google Sheet script. Verify your internet connection.";
+                    document.getElementById('status-error').style.display = 'flex';
+                    if (refreshBtn) refreshBtn.classList.remove('loading');
+                };
+
+                document.body.appendChild(script);
+
+            } catch (err) {
+                console.error("Trigger failed: ", err);
+                document.getElementById('status-loading').style.display = 'none';
+                document.getElementById('error-message').textContent = `Load trigger failed: ${err.message}`;
+                document.getElementById('status-error').style.display = 'flex';
+                if (refreshBtn) refreshBtn.classList.remove('loading');
+            }
+        }
+
+        // Filter and Search logic
+        function applyFilterAndSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            filteredStocks = rawStocksData.filter(stock => {
+                // Search term match
+                const matchesSearch = stock.symbol.toLowerCase().includes(query) || stock.id.toString() === query;
+                
+                if (!matchesSearch) return false;
+
+                // Category filter matching
+                const closeVal = stock.metrics['close 2'] ? parseFloat(stock.metrics['close 2'].val2) : NaN;
+                const openVal = stock.metrics['open'] ? parseFloat(stock.metrics['open'].val2) : NaN;
+                
+                const sigmaDiffObj = stock.sigmas.find(s => s.name === 'SIGMA 6DIFF');
+                const diffVal = sigmaDiffObj ? parseFloat(sigmaDiffObj.val1) : NaN;
+
+                if (currentFilter === 'bullish') {
+                    // Price is above base close or above current open
+                    return !isNaN(closeVal) && !isNaN(openVal) && closeVal > openVal;
+                } else if (currentFilter === 'bearish') {
+                    return !isNaN(closeVal) && !isNaN(openVal) && closeVal < openVal;
+                } else if (currentFilter === 'high-vol') {
+                    return !isNaN(diffVal) && diffVal > 5.0;
+                }
+                
+                return true;
+            });
+
+            renderStockList();
+            renderGridView();
+        }
+
+        // Render Sidebar List
+        function renderStockList() {
+            const listContainer = document.getElementById('stock-list-container');
+            listContainer.innerHTML = '';
+
+            if (filteredStocks.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: var(--text-dark); padding: 2rem; font-size: 0.85rem;">No tickers found</div>';
+                return;
+            }
+
+            filteredStocks.forEach(stock => {
+                const item = document.createElement('div');
+                item.className = `stock-item ${stock.id === selectedStockId ? 'active' : ''}`;
+                
+                const closeVal = stock.metrics['close 2'] ? parseFloat(stock.metrics['close 2'].val2) : NaN;
+                const openVal = stock.metrics['open'] ? parseFloat(stock.metrics['open'].val2) : NaN;
+                
+                const hasTrend = !isNaN(closeVal) && !isNaN(openVal);
+                const isPos = hasTrend && closeVal >= openVal;
+                const diffPercent = hasTrend ? ((closeVal - openVal) / openVal * 100).toFixed(2) : '0.00';
+
+                item.innerHTML = `
+                    <div class="stock-item-info">
+                        <div class="stock-item-symbol">${stock.symbol}</div>
+                        <div class="stock-item-id">ID: #${stock.id}</div>
+                    </div>
+                    <div class="stock-item-price-sec">
+                        <div class="stock-item-price">${!isNaN(closeVal) ? closeVal.toFixed(2) : '--'}</div>
+                        <div class="stock-item-diff ${isPos ? 'diff-pos' : 'diff-neg'}">
+                            ${isPos ? '▲' : '▼'} ${Math.abs(parseFloat(diffPercent)).toFixed(2)}%
+                        </div>
+                    </div>
+                `;
+
+                item.addEventListener('click', () => {
+                    selectedStockId = stock.id;
+                    
+                    // Highlight on click
+                    document.querySelectorAll('.stock-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+
+                    // If mobile view, close sidebar
+                    if (window.innerWidth <= 900) {
+                        document.getElementById('sidebar').classList.remove('open');
+                    }
+
+                    // Force switch to dashboard details view
+                    setView('dashboard');
+                    renderSelectedStockDetails();
+                });
+
+                listContainer.appendChild(item);
+            });
+        }
+
+        // Switch Workspace view mode (Dashboard vs Grid vs Portfolio)
+        function setView(viewMode) {
+            activeView = viewMode;
+            
+            const btnDash = document.getElementById('btn-view-dashboard');
+            const btnGrid = document.getElementById('btn-view-grid');
+            const btnPort = document.getElementById('btn-view-portfolio');
+            
+            const dashArea = document.getElementById('dashboard-view');
+            const gridArea = document.getElementById('grid-view');
+            const portArea = document.getElementById('portfolio-view');
+            
+            btnDash.classList.remove('active');
+            btnGrid.classList.remove('active');
+            btnPort.classList.remove('active');
+            
+            dashArea.style.display = 'none';
+            gridArea.style.display = 'none';
+            portArea.style.display = 'none';
+            document.getElementById('status-select-stock').style.display = 'none';
+            document.getElementById('status-loading').style.display = 'none';
+            
+            if (viewMode === 'dashboard') {
+                btnDash.classList.add('active');
+                if (selectedStockId) {
+                    dashArea.style.display = 'block';
+                } else {
+                    document.getElementById('status-select-stock').style.display = 'flex';
+                }
+            } else if (viewMode === 'grid') {
+                btnGrid.classList.add('active');
+                gridArea.style.display = 'block';
+            } else if (viewMode === 'portfolio') {
+                btnPort.classList.add('active');
+                portArea.style.display = 'block';
+                renderPortfolio();
+            }
+        }
+
+        // Redraw current selected content based on activeView
+        function refreshView() {
+            document.getElementById('status-loading').style.display = 'none';
+            setView(activeView);
+            if (selectedStockId) {
+                renderSelectedStockDetails();
+            }
+            if (activeView === 'portfolio') {
+                renderPortfolio();
+            }
+        }
+
+        // Populate detail panels for selected stock
+        function renderSelectedStockDetails() {
+            const stock = rawStocksData.find(s => s.id === selectedStockId);
+            if (!stock) return;
+
+            // Header titles
+            document.getElementById('stock-name').textContent = stock.symbol;
+            document.getElementById('stock-desc').textContent = `Index ID #${stock.id} • Registered sigma targets`;
+            
+            const close2Obj = stock.metrics['close 2'];
+            const currentPrice = close2Obj ? parseFloat(close2Obj.val2) : NaN;
+            document.getElementById('stock-price').textContent = !isNaN(currentPrice) ? currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '--';
+
+            // Metrics Cards
+            const openVal2 = stock.metrics['open'] ? parseFloat(stock.metrics['open'].val2) : NaN;
+            const openVal1 = stock.metrics['open'] ? parseFloat(stock.metrics['open'].val1) : NaN;
+            document.getElementById('metric-open-val').textContent = !isNaN(openVal2) ? openVal2.toFixed(2) : '--';
+            document.getElementById('metric-open-base').textContent = `Base: ${!isNaN(openVal1) ? openVal1.toFixed(2) : '--'}`;
+
+            const highVal2 = stock.metrics['high'] ? parseFloat(stock.metrics['high'].val2) : NaN;
+            const highVal1 = stock.metrics['high'] ? parseFloat(stock.metrics['high'].val1) : NaN;
+            document.getElementById('metric-high-val').textContent = !isNaN(highVal2) ? highVal2.toFixed(2) : '--';
+            document.getElementById('metric-high-base').textContent = `Base: ${!isNaN(highVal1) ? highVal1.toFixed(2) : '--'}`;
+
+            const lowVal2 = stock.metrics['low'] ? parseFloat(stock.metrics['low'].val2) : NaN;
+            const lowVal1 = stock.metrics['low'] ? parseFloat(stock.metrics['low'].val1) : NaN;
+            document.getElementById('metric-low-val').textContent = !isNaN(lowVal2) ? lowVal2.toFixed(2) : '--';
+            document.getElementById('metric-low-base').textContent = `Base: ${!isNaN(lowVal1) ? lowVal1.toFixed(2) : '--'}`;
+
+            const diffSig = stock.sigmas.find(s => s.name === 'SIGMA 6DIFF');
+            const diffVal = diffSig ? parseFloat(diffSig.val1) : NaN;
+            const diffPct = diffSig ? parseFloat(diffSig.val2) : NaN;
+            document.getElementById('metric-diff-val').textContent = !isNaN(diffVal) ? diffVal.toFixed(2) : '--';
+            document.getElementById('metric-diff-pct').textContent = `Spread: ${!isNaN(diffPct) ? diffPct.toFixed(2) + '%' : 'Vol model'}`;
+
+            // Build Sigma interactive Gauge & Tables
+            renderSigmaGauge(stock, currentPrice);
+            renderSigmaTable(stock);
+            renderRawTable(stock);
+            renderDeviationChart(stock, currentPrice);
+
+            // ── Live Google Sheet chart ────────────────────────────────────
+            const liveWrap  = document.getElementById('live-chart-wrap');
+            const liveLabel = document.getElementById('live-chart-symbol');
+            const liveBadge = document.getElementById('live-chart-badge');
+            if (liveWrap) {
+                // Primary: match by symbol name (case-insensitive)
+                const key = stock.symbol.toUpperCase().trim();
+                const chartUrl = STOCK_CHART_MAP[key] ?? STOCK_CHART_BY_ID[stock.id - 1] ?? null;
+                if (chartUrl) {
+                    liveWrap.innerHTML = `<iframe src="${chartUrl}" allowfullscreen loading="lazy"></iframe>`;
+                    if (liveLabel) liveLabel.textContent = stock.symbol;
+                    if (liveBadge) liveBadge.style.display = 'inline-block';
+                } else {
+                    liveWrap.innerHTML = `<div class="live-chart-placeholder"><i data-feather="alert-circle" style="width:22px;height:22px;opacity:0.3;"></i><span>No chart mapped for ${stock.symbol}</span></div>`;
+                    feather.replace();
+                    if (liveLabel) liveLabel.textContent = '';
+                    if (liveBadge) liveBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // Draw horizontal Sigma visual pointer
+        function renderSigmaGauge(stock, currentPrice) {
+            const sig3Neg = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA -3')?.val1);
+            const sig2Neg = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA -2')?.val1);
+            const sig1Neg = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA -1')?.val1);
+            const closeVal = parseFloat(stock.sigmas.find(s => s.name === 'CLOSE')?.val1);
+            const sig1Pos = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA +1')?.val1);
+            const sig2Pos = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA +2')?.val1);
+            const sig3Pos = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA +3')?.val1);
+
+            const ticksContainer = document.getElementById('gauge-ticks-container');
+            ticksContainer.innerHTML = '';
+
+            const keySigmas = [
+                { name: '-3σ', val: sig3Neg, class: 'color-sig-3-neg' },
+                { name: '-2σ', val: sig2Neg, class: 'color-sig-2-neg' },
+                { name: '-1σ', val: sig1Neg, class: 'color-sig-1-neg' },
+                { name: 'CLOSE', val: closeVal, class: 'color-sig-close' },
+                { name: '+1σ', val: sig1Pos, class: 'color-sig-1-pos' },
+                { name: '+2σ', val: sig2Pos, class: 'color-sig-2-pos' },
+                { name: '+3σ', val: sig3Pos, class: 'color-sig-3-pos' }
+            ];
+
+            // Render Tick markers below slider
+            keySigmas.forEach(sig => {
+                const tick = document.createElement('div');
+                tick.className = 'gauge-tick';
+                tick.innerHTML = `
+                    <div class="gauge-tick-line"></div>
+                    <div class="gauge-tick-name ${sig.class}">${sig.name}</div>
+                    <div class="gauge-tick-val">${!isNaN(sig.val) ? sig.val.toFixed(1) : '--'}</div>
+                `;
+                ticksContainer.appendChild(tick);
+            });
+
+            // Calculate current price position on slider
+            const marker = document.getElementById('gauge-marker');
+            const statusLabel = document.getElementById('gauge-status-label');
+            const pointerText = document.getElementById('gauge-pointer-text');
+
+            if (isNaN(currentPrice) || isNaN(sig3Neg) || isNaN(sig3Pos) || (sig3Pos - sig3Neg === 0)) {
+                marker.style.left = '50%';
+                statusLabel.textContent = 'Indeterminate';
+                statusLabel.className = 'gauge-status';
+                statusLabel.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                statusLabel.style.color = 'var(--text-muted)';
+                pointerText.textContent = '--';
+                return;
+            }
+
+            pointerText.textContent = currentPrice.toFixed(2);
+
+            // Cap percentage [0, 100]
+            let pct = ((currentPrice - sig3Neg) / (sig3Pos - sig3Neg)) * 100;
+            pct = Math.max(0, Math.min(100, pct));
+            marker.style.left = `${pct}%`;
+
+            // Style status badge based on where price sits
+            if (currentPrice > sig3Pos) {
+                statusLabel.textContent = 'Hyper-Bullish (+3σ)';
+                statusLabel.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                statusLabel.style.color = 'var(--accent-green)';
+            } else if (currentPrice >= sig2Pos) {
+                statusLabel.textContent = 'Bullish Zone (+2σ)';
+                statusLabel.style.backgroundColor = 'rgba(52, 211, 153, 0.2)';
+                statusLabel.style.color = '#34d399';
+            } else if (currentPrice >= sig1Pos) {
+                statusLabel.textContent = 'Mildly Bullish (+1σ)';
+                statusLabel.style.backgroundColor = 'rgba(6, 182, 212, 0.2)';
+                statusLabel.style.color = 'var(--accent-cyan)';
+            } else if (currentPrice >= sig1Neg) {
+                statusLabel.textContent = 'Neutral Range';
+                statusLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                statusLabel.style.color = '#cbd5e1';
+            } else if (currentPrice >= sig2Neg) {
+                statusLabel.textContent = 'Mildly Bearish (-1σ)';
+                statusLabel.style.backgroundColor = 'rgba(245, 158, 11, 0.15)';
+                statusLabel.style.color = 'var(--accent-orange)';
+            } else if (currentPrice >= sig3Neg) {
+                statusLabel.textContent = 'Bearish Zone (-2σ)';
+                statusLabel.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                statusLabel.style.color = '#f87171';
+            } else {
+                statusLabel.textContent = 'Hyper-Bearish (-3σ)';
+                statusLabel.style.backgroundColor = 'rgba(239, 68, 68, 0.25)';
+                statusLabel.style.color = 'var(--accent-red)';
+            }
+        }
+
+        // Render Details Table
+        function renderSigmaTable(stock) {
+            const tbody = document.getElementById('sigma-table-body');
+            tbody.innerHTML = '';
+
+            const order = ['SIGMA +3', 'SIGMA +2', 'SIGMA +1', 'CLOSE', 'SIGMA -1', 'SIGMA -2', 'SIGMA -3', 'SIGMA 6DIFF'];
+            
+            order.forEach(name => {
+                const sig = stock.sigmas.find(s => s.name === name);
+                if (!sig) return;
+
+                const tr = document.createElement('tr');
+                let colorClass = 'color-sig-close';
+                let indicatorDot = '⚪';
+
+                if (name.includes('+3')) { colorClass = 'color-sig-3-pos'; indicatorDot = '🟢'; }
+                else if (name.includes('+2')) { colorClass = 'color-sig-2-pos'; indicatorDot = '🟢'; }
+                else if (name.includes('+1')) { colorClass = 'color-sig-1-pos'; indicatorDot = '🔵'; }
+                else if (name.includes('-1')) { colorClass = 'color-sig-1-neg'; indicatorDot = '🟡'; }
+                else if (name.includes('-2')) { colorClass = 'color-sig-2-neg'; indicatorDot = '🟠'; }
+                else if (name.includes('-3')) { colorClass = 'color-sig-3-neg'; indicatorDot = '🔴'; }
+                else if (name.includes('6DIFF')) { colorClass = 'color-sig-close'; indicatorDot = '⚡'; }
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="table-sigma-name ${colorClass}">
+                            <span>${indicatorDot}</span> ${name}
+                        </div>
+                    </td>
+                    <td>${sig.val1 || '--'}</td>
+                    <td>${sig.val2 || '--'}</td>
+                    <td style="font-family: monospace;">${sig.val3 || '--'}</td>
+                    <td class="${parseFloat(sig.val4) >= 0 ? 'color-sig-1-pos' : parseFloat(sig.val4) < 0 ? 'color-sig-3-neg' : ''}" style="font-family: monospace; font-weight:600;">
+                        ${sig.val4 ? sig.val4 + '%' : '--'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Raw block table data
+        function renderRawTable(stock) {
+            const tbody = document.getElementById('raw-table-body');
+            tbody.innerHTML = '';
+
+            stock.rawRows.forEach(rowInfo => {
+                if (rowInfo.type === 'header') return; // Skip title row
+                
+                const tr = document.createElement('tr');
+                const d = rowInfo.data;
+                
+                const colName = d[1] || d[4] || '--';
+                const col2 = d[2] || d[5] || '--';
+                const col3 = d[3] || d[6] || '--';
+                const col4 = d[7] || '--';
+                const col5 = d[8] ? d[8] + '%' : '--';
+
+                tr.innerHTML = `
+                    <td style="font-weight:600;">${colName}</td>
+                    <td>${col2}</td>
+                    <td>${col3}</td>
+                    <td>${col4}</td>
+                    <td>${col5}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Grid View matrix cards for all stocks
+        function renderGridView() {
+            const container = document.getElementById('grid-cards-container');
+            container.innerHTML = '';
+
+            if (filteredStocks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-dark); padding: 4rem; width: 100%;">No tickers match selected filter criteria.</div>';
+                return;
+            }
+
+            filteredStocks.forEach(stock => {
+                const card = document.createElement('div');
+                card.className = 'overview-card';
+                if (stock.id === selectedStockId) {
+                    card.style.borderColor = 'var(--accent-indigo)';
+                    card.style.boxShadow = '0 8px 20px rgba(99,102,241,0.1)';
+                }
+
+                const closeVal = stock.metrics['close 2'] ? parseFloat(stock.metrics['close 2'].val2) : NaN;
+                const openVal = stock.metrics['open'] ? parseFloat(stock.metrics['open'].val2) : NaN;
+                const hasTrend = !isNaN(closeVal) && !isNaN(openVal);
+                const isPos = hasTrend && closeVal >= openVal;
+
+                // Position on Sigma Gauge
+                const sig3Neg = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA -3')?.val1);
+                const sig3Pos = parseFloat(stock.sigmas.find(s => s.name === 'SIGMA +3')?.val1);
+                
+                let pct = 50;
+                let color = 'var(--text-dark)';
+                if (!isNaN(closeVal) && !isNaN(sig3Neg) && !isNaN(sig3Pos) && (sig3Pos - sig3Neg !== 0)) {
+                    pct = ((closeVal - sig3Neg) / (sig3Pos - sig3Neg)) * 100;
+                    pct = Math.max(0, Math.min(100, pct));
+                    
+                    if (pct > 75) color = 'var(--accent-green)';
+                    else if (pct > 55) color = 'var(--accent-cyan)';
+                    else if (pct > 45) color = '#cbd5e1';
+                    else if (pct > 25) color = 'var(--accent-orange)';
+                    else color = 'var(--accent-red)';
+                }
+
+                const sigmaDiffObj = stock.sigmas.find(s => s.name === 'SIGMA 6DIFF');
+                const diffVal = sigmaDiffObj ? parseFloat(sigmaDiffObj.val1) : NaN;
+
+                card.innerHTML = `
+                    <div class="overview-card-header">
+                        <div class="overview-card-symbol">${stock.symbol}</div>
+                        <div class="stock-item-diff ${isPos ? 'diff-pos' : 'diff-neg'}">
+                            ${isPos ? '▲' : '▼'} ${hasTrend ? ((closeVal - openVal)/openVal*100).toFixed(1) + '%' : '0.0%'}
+                        </div>
+                    </div>
+                    <div class="overview-card-price">${!isNaN(closeVal) ? closeVal.toFixed(2) : '--'}</div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:0.25rem;">
+                        <span style="font-size:0.65rem; color:var(--text-dark); font-weight:700; text-transform:uppercase;">Sigma Spread Position</span>
+                        <div class="overview-card-gauge-preview">
+                            <div class="overview-card-gauge-fill" style="width: ${pct}%; background-color: ${color};"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="overview-card-metrics">
+                        <span>Range: ${stock.metrics['low'] ? parseFloat(stock.metrics['low'].val2).toFixed(1) : '--'} - ${stock.metrics['high'] ? parseFloat(stock.metrics['high'].val2).toFixed(1) : '--'}</span>
+                        <span>6DIFF: ${!isNaN(diffVal) ? diffVal.toFixed(1) : '--'}</span>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    selectedStockId = stock.id;
+                    renderStockList();
+                    setView('dashboard');
+                    renderSelectedStockDetails();
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        // Draw Deviation line chart
+        function renderDeviationChart(stock, currentPrice) {
+            const ctx = document.getElementById('deviationChart').getContext('2d');
+            
+            const labels = [];
+            const dataPoints = [];
+            const colors = [];
+
+            const keys = ['SIGMA -3', 'SIGMA -2', 'SIGMA -1', 'CLOSE', 'SIGMA +1', 'SIGMA +2', 'SIGMA +3'];
+            
+            keys.forEach(key => {
+                const sig = stock.sigmas.find(s => s.name === key);
+                if (sig && sig.val1) {
+                    const price = parseFloat(sig.val1);
+                    if (!isNaN(price)) {
+                        labels.push(key.replace('SIGMA ', ''));
+                        dataPoints.push(price);
+                    }
+                }
+            });
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if (dataPoints.length === 0) return;
+
+            // Chart JS implementation
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sigma Levels',
+                        data: dataPoints,
+                        borderColor: 'rgba(99, 102, 241, 0.4)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                        borderWidth: 2,
+                        pointBackgroundColor: labels.map(l => {
+                            if (l.includes('-3')) return '#ef4444';
+                            if (l.includes('-2')) return '#f87171';
+                            if (l.includes('-1')) return '#fca5a5';
+                            if (l.includes('+1')) return '#6ee7b7';
+                            if (l.includes('+2')) return '#34d399';
+                            if (l.includes('+3')) return '#10b981';
+                            return '#cbd5e1';
+                        }),
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.15,
+                        fill: true
+                    },
+                    {
+                        label: 'Current Price',
+                        data: Array(labels.length).fill(currentPrice),
+                        borderColor: 'rgba(6, 182, 212, 0.7)',
+                        borderWidth: 1.5,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 11, 20, 0.95)',
+                            titleFont: { family: 'Outfit', size: 12 },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.04)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { family: 'Outfit', size: 10 }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { family: 'Plus Jakarta Sans', size: 10, weight: '600' }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Portfolio Tracker Logic
+        function loadPortfolio() {
+            try {
+                const stored = localStorage.getItem('sigma_portfolio');
+                portfolioItems = stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error("Failed to load portfolio: ", e);
+                portfolioItems = [];
+            }
+        }
+
+        function savePortfolio() {
+            try {
+                localStorage.setItem('sigma_portfolio', JSON.stringify(portfolioItems));
+            } catch (e) {
+                console.error("Failed to save portfolio: ", e);
+            }
+        }
+
+        function populateTickerSuggestions() {
+            const datalist = document.getElementById('ticker-suggestions');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            rawStocksData.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.symbol;
+                datalist.appendChild(option);
+            });
+        }
+
+        function renderPortfolio() {
+            const tbody = document.getElementById('portfolio-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let totalInvested = 0;
+            let sumPlPct = 0;
+            let countPl = 0;
+
+            if (portfolioItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-dark); padding: 2rem;">
+                            No positions added yet. Use the form above to add custom entry.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('port-total-invested').textContent = '0.00';
+                document.getElementById('port-net-pl').textContent = '0.00%';
+                const portPlContainer = document.getElementById('port-pl-container');
+                portPlContainer.style.borderColor = 'var(--card-border)';
+                return;
+            }
+
+            portfolioItems.forEach(item => {
+                const cleanSymbol = item.symbol.toUpperCase().trim();
+                const stockObj = rawStocksData.find(s => s.symbol.toUpperCase().trim() === cleanSymbol);
+                let currentPrice = NaN;
+                
+                if (stockObj) {
+                    const close2Obj = stockObj.metrics['close 2'];
+                    if (close2Obj) currentPrice = parseFloat(close2Obj.val2);
+                }
+
+                let plPct = NaN;
+                if (!isNaN(currentPrice) && !isNaN(item.entryPrice) && item.entryPrice > 0) {
+                    if (item.action === 'BUY') {
+                        plPct = ((currentPrice - item.entryPrice) / item.entryPrice) * 100;
+                    } else if (item.action === 'SELL') {
+                        plPct = ((item.entryPrice - currentPrice) / item.entryPrice) * 100;
+                    }
+                }
+
+                totalInvested += item.entryPrice;
+
+                let plClass = '';
+                let plText = '--';
+                if (!isNaN(plPct)) {
+                    sumPlPct += plPct;
+                    countPl++;
+                    plClass = plPct >= 0 ? 'color-sig-3-pos' : 'color-sig-3-neg';
+                    plText = (plPct >= 0 ? '+' : '') + plPct.toFixed(2) + '%';
+                }
+
+                // Visual highlighting if target price has been achieved
+                let targetClass = '';
+                if (!isNaN(currentPrice) && item.targetPrice) {
+                    if (item.action === 'BUY' && currentPrice >= item.targetPrice) {
+                        targetClass = 'color-sig-3-pos';
+                    } else if (item.action === 'SELL' && currentPrice <= item.targetPrice) {
+                        targetClass = 'color-sig-3-pos';
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 700; text-transform: uppercase;">${item.symbol}</td>
+                    <td>
+                        <span class="${item.action === 'BUY' ? 'badge-buy' : 'badge-sell'}">${item.action}</span>
+                    </td>
+                    <td style="font-family: monospace;">${item.entryPrice.toFixed(2)}</td>
+                    <td class="${targetClass}" style="font-family: monospace; font-weight: ${targetClass ? '700' : 'normal'};">${item.targetPrice ? item.targetPrice.toFixed(2) : '--'}</td>
+                    <td style="font-family: monospace;">${!isNaN(currentPrice) ? currentPrice.toFixed(2) : 'Loading...'}</td>
+                    <td class="${plClass}" style="font-family: monospace; font-weight: 700;">${plText}</td>
+                    <td style="text-align: center;">
+                        <button class="delete-btn" onclick="deletePortfolioEntry(${item.id})" title="Delete Position">
+                            <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update analytics panels
+            document.getElementById('port-total-invested').textContent = totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            const portNetPlEl = document.getElementById('port-net-pl');
+            const portPlContainer = document.getElementById('port-pl-container');
+            if (countPl > 0) {
+                const avgPl = sumPlPct / countPl;
+                portNetPlEl.textContent = (avgPl >= 0 ? '+' : '') + avgPl.toFixed(2) + '%';
+                if (avgPl >= 0) {
+                    portNetPlEl.className = 'metric-val-main color-sig-3-pos';
+                    portPlContainer.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                } else {
+                    portNetPlEl.className = 'metric-val-main color-sig-3-neg';
+                    portPlContainer.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                }
+            } else {
+                portNetPlEl.textContent = '0.00%';
+                portNetPlEl.className = 'metric-val-main';
+                portPlContainer.style.borderColor = 'var(--card-border)';
+            }
+
+            feather.replace();
+        }
+
+        window.deletePortfolioEntry = function(id) {
+            portfolioItems = portfolioItems.filter(item => item.id !== id);
+            savePortfolio();
+            renderPortfolio();
+        };
+
+        // Setup DOM event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load portfolio data
+            loadPortfolio();
+
+            // Load live data
+            loadData();
+
+            // Refresh Button
+            document.getElementById('btn-refresh').addEventListener('click', loadData);
+
+            // Set up Auto-Refresh every 60 seconds
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(loadData, 60000);
+
+            // Tab toggling
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Portfolio Form Submission
+            const portForm = document.getElementById('portfolio-form');
+            if (portForm) {
+                portForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const symbolInput = document.getElementById('portfolio-symbol');
+                    const priceInput = document.getElementById('portfolio-price');
+                    const targetInput = document.getElementById('portfolio-target');
+                    const actionSelect = document.getElementById('portfolio-action');
+                    
+                    const symbol = symbolInput.value.toUpperCase().trim();
+                    const entryPrice = parseFloat(priceInput.value);
+                    const targetPrice = parseFloat(targetInput.value);
+                    const action = actionSelect.value;
+                    
+                    if (symbol && !isNaN(entryPrice) && entryPrice > 0) {
+                        const newEntry = {
+                            id: Date.now(),
+                            symbol: symbol,
+                            entryPrice: entryPrice,
+                            targetPrice: !isNaN(targetPrice) ? targetPrice : null,
+                            action: action
+                        };
+                        portfolioItems.push(newEntry);
+                        savePortfolio();
+                        renderPortfolio();
+                        
+                        // Reset form
+                        symbolInput.value = '';
+                        priceInput.value = '';
+                        targetInput.value = '';
+                        actionSelect.value = 'BUY';
+                        symbolInput.focus();
+                    }
+                });
+            }
+
+            // View Mode toggling
+            document.getElementById('btn-view-dashboard').addEventListener('click', () => setView('dashboard'));
+            document.getElementById('btn-view-grid').addEventListener('click', () => setView('grid'));
+            document.getElementById('btn-view-portfolio').addEventListener('click', () => setView('portfolio'));
+
+            // Mobile menu toggling
+            document.getElementById('menu-toggle').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
+
+            // Search filter typing
+            document.getElementById('search-input').addEventListener('input', applyFilterAndSearch);
+
+            // Category filter click
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(el => el.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.getAttribute('data-filter');
+                    applyFilterAndSearch();
+                });
+            });
+
+            // Replace feather icons
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
